@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id String @id @default(uuid())
+
+  email String @unique
+  pass String
+
+  exerciseProgresses ExerciseProgress[]
+  unitProgresses UnitProgress[]
+
+  @@map("users")
+}
+
+model Course {
+  id String @id @default(uuid())
+
+  name String
+  sourceLang String 
+  targetLang String
+
+  tracks Track[]
+
+  @@map("courses")
+}
+
+model Track {
+  id String @id @default(uuid())
+
+  name String
+  courseId String 
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  units Unit[]
+
+  @@map("tracks")
+}
+
+model Unit {
+  id String @id @default(uuid())
+
+  name String?
+
+  trackId String 
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  exercises Exercise[]
+  unitProgresses UnitProgress[]
+
+  @@map("units")
+}
+
+model UnitProgress {
+  id String @id @default(uuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isCompleted Boolean @default(false)
+  totalExercises Int
+  completedExercises Int @default(0)
+  
+  unitId String
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@map("unit_progresses")
+}
+
+model Exercise {
+  id String @id @default(uuid())
+
+  text String
+  type ExerciseType
+  sourceLang String 
+  targetLang String 
+
+  unitId String
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  exerciseProgresses ExerciseProgress[]
+
+  @@map("exercises")
+}
+
+model ExerciseProgress {
+  id String @id @default(uuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isCompleted Boolean @default(false)
+  
+  semanticLevel Int?
+  detectedLevel String?
+  explanation String?
+
+  exerciseId String
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@map("exercise_progresses")
+}
+
+enum ExerciseType {
+  fromSourceToTarget
+  fromTargetToSource
+}
