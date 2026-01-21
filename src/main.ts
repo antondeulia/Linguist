@@ -14,6 +14,8 @@ async function bootstrap() {
 
 	app.setGlobalPrefix('api')
 
+	app.enableCors()
+
 	const configService = app.get(ConfigService)
 
 	const HOST = configService.getOrThrow<string>('HOST')
