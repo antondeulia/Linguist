@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
   moduleFormat = "cjs"
 }
 
@@ -9,106 +9,183 @@ datasource db {
 }
 
 model User {
-  id String @id @default(uuid())
-
-  email String @unique
-  pass String
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  pass               String
 
   exerciseProgresses ExerciseProgress[]
-  unitProgresses UnitProgress[]
+  unitProgresses     UnitProgress[]
+
+  examAttempts       ExamTaskAttempt[]
+  examSectionProgresses ExamSectionProgress[]
 
   @@map("users")
 }
 
 model Course {
-  id String @id @default(uuid())
-
-  name String
-  sourceLang String 
+  id         String  @id @default(uuid())
+  name       String
+  sourceLang String
   targetLang String
-
-  tracks Track[]
+  tracks     Track[]
 
   @@map("courses")
 }
 
 model Track {
-  id String @id @default(uuid())
-
-  name String
-  courseId String 
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  units Unit[]
+  id       String @id @default(uuid())
+  name     String
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  units    Unit[]
 
   @@map("tracks")
 }
 
 model Unit {
-  id String @id @default(uuid())
-
-  name String?
-
-  trackId String 
-  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
-
-  exercises Exercise[]
+  id             String         @id @default(uuid())
+  name           String?
+  trackId        String
+  track          Track          @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  exercises      Exercise[]
   unitProgresses UnitProgress[]
 
   @@map("units")
 }
 
 model UnitProgress {
-  id String @id @default(uuid())
-
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  isCompleted Boolean @default(false)
-  totalExercises Int
-  completedExercises Int @default(0)
-  
-  unitId String
-  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  id                 String  @id @default(uuid())
+  userId             String
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isCompleted        Boolean @default(false)
+  totalExercises     Int
+  completedExercises Int     @default(0)
+  unitId             String
+  unit               Unit    @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
   @@map("unit_progresses")
 }
 
 model Exercise {
-  id String @id @default(uuid())
-
-  text String
-  type ExerciseType
-  sourceLang String 
-  targetLang String 
-
-  unitId String
-  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
-
+  id                 String             @id @default(uuid())
+  text               String
+  type               ExerciseType
+  sourceLang         String
+  targetLang         String
+  unitId             String
+  unit               Unit               @relation(fields: [unitId], references: [id], onDelete: Cascade)
   exerciseProgresses ExerciseProgress[]
 
   @@map("exercises")
 }
 
 model ExerciseProgress {
-  id String @id @default(uuid())
-
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  isCompleted Boolean @default(false)
-  
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isCompleted   Boolean  @default(false)
   semanticLevel Int?
   detectedLevel String?
-  explanation String?
-
-  exerciseId String
-  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  explanation   String?
+  exerciseId    String
+  exercise      Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
 
   @@map("exercise_progresses")
 }
 
+// Exam
+
+model Exam {
+  id           String        @id @default(uuid())
+  code         String
+  name         String
+  examSections ExamSection[]
+
+  @@map("exams")
+}
+
+model ExamSection {
+  id     String @id @default(uuid())
+  type   String
+
+  examId String @map("exam_id")
+  exam   Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  examTasks ExamTask[]
+  examSectionProgresses ExamSectionProgress[]
+
+  @@map("exam_sections")
+}
+
+model ExamTask {
+  id String @id @default(uuid())
+  taskType String @map("task_type")
+  config Json
+  timeLimit Int? @map("time_limit")
+
+  sectionId String @map("section_id")
+  section ExamSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  attempts ExamTaskAttempt[]
+
+  @@map("exam_tasks")
+}
+
+model ExamSectionProgress {
+  id String @id @default(uuid())
+  state ExamSectionProgressStatusEnum @default(not_started)
+  currentTaskIndex Int @default(0) @map("current_task_index")
+
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) 
+  
+  sectionId String @map("section_id")
+  section ExamSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  finishedAt DateTime?
+
+  @@unique([userId, sectionId])
+  @@map("exam_section_progresses")
+}
+
+model ExamTaskAttempt {
+  id String @id @default(uuid())
+  answer Json
+
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  taskId String @map("task_id")
+  task ExamTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  evaluation ExamTaskEvaluation?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("exam_task_attempts")
+}
+
+model ExamTaskEvaluation {
+  id String @id @default(uuid())
+
+  rubricScores Json
+  normalizedScore Float
+
+  attemptId String @unique @map("attempt_id")
+  attempt ExamTaskAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@map("exam_task_evaluations")
+}
+
+// Enums
 enum ExerciseType {
   fromSourceToTarget
   fromTargetToSource
+}
+
+enum ExamSectionProgressStatusEnum {
+  not_started
+  in_progress
+  completed
 }

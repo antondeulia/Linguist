@@ -11,6 +11,9 @@ import { ExerciseProgressModule } from './modules/exercise-progress/exercise-pro
 import { CoursesModule } from './modules/courses/courses.module';
 import { UnitsModule } from './modules/units/units.module';
 import { UnitProgressesModule } from './modules/unit-progresses/unit-progresses.module';
+import { ExamsModule } from './modules/exams/exams.module';
+import { ExamSectionsModule } from './modules/exam-sections/exam-sections.module';
+import { ExamSectionProgressesModule } from './modules/exam-section-progresses/exam-section-progresses.module';
 
 @Module({
 	imports: [
@@ -25,6 +28,9 @@ import { UnitProgressesModule } from './modules/unit-progresses/unit-progresses.
 		CoursesModule,
 		UnitsModule,
 		UnitProgressesModule,
+		ExamsModule,
+		ExamSectionsModule,
+		ExamSectionProgressesModule,
 	],
 	controllers: [AppController],
 })
