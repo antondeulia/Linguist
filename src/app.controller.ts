@@ -78,6 +78,27 @@ export class AppController {
 				})
 			}
 		}
+
+		await this.prisma.exam.create({
+			data: {
+				name: 'IELTS Academic',
+				code: 'IELTS',
+				sections: {
+					createMany: {
+						data: [
+							{
+								name: 'Reading',
+								type: 'writing',
+							},
+							{
+								name: 'Speaking',
+								type: 'reading',
+							},
+						],
+					},
+				},
+			},
+		})
 	}
 
 	@ApiOperation({ summary: 'Clean db' })
@@ -94,6 +115,14 @@ export class AppController {
 
 		// Units
 		await this.prisma.unit.deleteMany()
+
+		await this.prisma.exam.deleteMany()
+
+		await this.prisma.examSection.deleteMany()
+
+		await this.prisma.examSectionAttempt.deleteMany()
+
+		await this.prisma.examTask.deleteMany()
 
 		// Exercises
 		await this.prisma.exercise.deleteMany()

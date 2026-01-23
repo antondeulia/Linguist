@@ -16,6 +16,7 @@ model User {
 
   exerciseProgresses ExerciseProgress[]
   unitProgresses UnitProgress[]
+  examSectionAttempts ExamSectionAttempt[]
 
   @@map("users")
 }
@@ -108,7 +109,65 @@ model ExerciseProgress {
   @@map("exercise_progresses")
 }
 
+// Exams
+model Exam {
+  id String @id @default(uuid())
+  code String
+  name String
+
+  sections ExamSection[]
+
+  @@map("exams")
+}
+
+model ExamSection {
+  id String @id @default(uuid())
+  name String
+  type ExamSectionTypeEnum @default(listening)
+
+  examId String @map("exam_id")
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  attempts ExamSectionAttempt[]
+
+  @@map("exam_sections")
+}
+
+model ExamSectionAttempt {
+  id String @id @default(uuid())
+  currentTaskIndex Int @default(0) @map("current_task_index")
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  sectionId String
+  section ExamSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  tasks ExamTask[]
+
+  @@map("exam_section_attempts")
+}
+
+model ExamTask {
+  id String @id @default(uuid())
+  prompt Json
+  order Int
+  
+  sectionAttemptId String @map("section_attempt_id")
+  sectionAttempt ExamSectionAttempt @relation(fields: [sectionAttemptId], references: [id], onDelete: Cascade)
+
+  @@map("exam_tasks")
+}
+
+// Enums
 enum ExerciseType {
   fromSourceToTarget
   fromTargetToSource
+}
+
+enum ExamSectionTypeEnum {
+  reading
+  writing
+  speaking
+  listening
 }
