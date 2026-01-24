@@ -13,16 +13,19 @@ export class UnitsRepo {
 		})
 	}
 
-	async getExercisesCount(id: string): Promise<number> {
-		const unit = await this.prisma.unit.findUnique({
-			where: { id },
-			select: {
-				_count: {
-					select: { exercises: true },
-				},
+	async getExercisesCount(unitId: string) {
+		return await this.prisma.exercise.count({
+			where: {
+				unitId,
 			},
 		})
+	}
 
-		return unit?._count.exercises ?? 0
+	async getCountByTrackId(trackId: string): Promise<number> {
+		return await this.prisma.unit.count({
+			where: {
+				trackId,
+			},
+		})
 	}
 }
