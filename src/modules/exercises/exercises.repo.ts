@@ -19,4 +19,12 @@ export class ExercisesRepo {
 			where: { id },
 		})
 	}
+
+	async getCountByUnit(unitId: string): Promise<number> {
+		return await this.prisma.exercise.count({
+			where: {
+				unitId,
+			},
+		})
+	}
 }

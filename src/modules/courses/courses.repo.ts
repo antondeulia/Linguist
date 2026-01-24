@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { Course } from 'generated/prisma/browser'
+import { Course, Prisma } from 'generated/prisma/browser'
 import { PrismaService } from 'src/infra/db/prisma.service'
 import { GetCourseInput } from './types'
 
@@ -11,20 +11,16 @@ export class CoursesRepo {
 		return await this.prisma.course.findMany()
 	}
 
-	async getById({ id, userId }: GetCourseInput): Promise<Course | null> {
+	async getById({ id, userId }: GetCourseInput): Promise<CourseWithRelations | null> {
 		return await this.prisma.course.findUnique({
 			where: { id },
 			include: {
 				tracks: {
 					include: {
+						progresses: true,
 						units: {
 							include: {
-								unitProgresses: true,
-								// unitProgresses: {
-								// 	where: {
-								// 		userId,
-								// 	},
-								// },
+								progresses: true,
 							},
 						},
 					},
@@ -33,3 +29,18 @@ export class CoursesRepo {
 		})
 	}
 }
+
+export type CourseWithRelations = Prisma.CourseGetPayload<{
+	include: {
+		tracks: {
+			include: {
+				progresses: true
+				units: {
+					include: {
+						progresses: true
+					}
+				}
+			}
+		}
+	}
+}>

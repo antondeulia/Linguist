@@ -5,9 +5,9 @@ import OpenAI from 'openai'
 import { ConfigService } from '@nestjs/config'
 import { ValidateExerciseLlmRes } from 'src/core/types/validate-exercise-llm.response'
 import { ExerciseProgressRepo } from '../exercise-progress/exercise-progress.repo'
-import { UnitProgressesRepo } from '../unit-progresses/unit-progresses.repo'
-import { Unit, UnitProgress } from 'generated/prisma/browser'
-import { UnitsRepo } from '../units/units.repo'
+import { UnitProgressesService } from '../unit-progresses/unit-progresses.service'
+import { TrackProgressesService } from '../track-progresses/track-progresses.service'
+import { Unit } from 'generated/prisma/browser'
 
 @Injectable()
 export class ExercisesService {
@@ -17,8 +17,8 @@ export class ExercisesService {
 		private readonly config: ConfigService,
 		private readonly exercisesRepo: ExercisesRepo,
 		private readonly exerciseProgressRepo: ExerciseProgressRepo,
-		private readonly unitProgressRepo: UnitProgressesRepo,
-		private readonly unitsRepo: UnitsRepo,
+		private readonly unitProgressesService: UnitProgressesService,
+		private readonly trackProgressesService: TrackProgressesService,
 	) {
 		this.client = new OpenAI({
 			apiKey: this.config.getOrThrow<string>('OPENAI_API_KEY'),
@@ -30,30 +30,16 @@ export class ExercisesService {
 	}
 
 	async validate(data: ValidateExerciseDto) {
+		// Mock
 		const userId = '1'
 
+		// Get exercise
 		const exercise = await this.exercisesRepo.getById(data.exerciseId)
-
 		if (!exercise) {
 			throw new NotFoundException('Exercise does not exist')
 		}
 
-		let unitProgress: UnitProgress | null = await this.unitProgressRepo.getOne({
-			unitId: exercise.unitId,
-			userId,
-		})
-
-		const totalExercises = await this.unitsRepo.getExercisesCount(exercise.unitId)
-
-		if (!unitProgress) {
-			unitProgress = await this.unitProgressRepo.create({
-				unitId: exercise.unitId,
-				userId,
-				totalExercises,
-				completedExercises: 0,
-			})
-		}
-
+		// LLM validation
 		const result = await this.client.chat.completions.create({
 			model: 'gpt-4.1',
 			response_format: {
@@ -106,6 +92,7 @@ export class ExercisesService {
 			],
 		})
 
+		// LLM response
 		const {
 			isAcceptable,
 			semanticLevel,
@@ -113,42 +100,36 @@ export class ExercisesService {
 			explanation,
 		}: ValidateExerciseLlmRes = JSON.parse(result.choices[0].message.content || '')
 
-		const exerciseProgress = await this.exerciseProgressRepo.create({
+		// If LLM does not accept, return isAcceptable = false, with explanation
+		if (!isAcceptable) {
+			return {
+				isAcceptable,
+				semanticLevel,
+				detectedLevel,
+				explanation,
+			}
+		}
+
+		// Create exercise progress
+		await this.exerciseProgressRepo.create({
 			userId,
 			exerciseId: exercise.id,
+			semanticLevel,
+			detectedLevel,
+			explanation,
 		})
 
-		if (isAcceptable) {
-			await this.exerciseProgressRepo.update(exerciseProgress.id, {
-				semanticLevel,
-				detectedLevel,
-				explanation,
-			})
+		// Update unit progress
+		await this.unitProgressesService.exerciseCompleted({
+			unitId: exercise.unitId,
+			userId,
+		})
 
-			if (unitProgress.completedExercises + 1 === unitProgress.totalExercises) {
-				await this.unitProgressRepo.update(unitProgress.id, {
-					completedExercises: unitProgress.completedExercises + 1,
-					isCompleted: true,
-				})
-			} else {
-				await this.unitProgressRepo.update(unitProgress.id, {
-					completedExercises: unitProgress.completedExercises + 1,
-				})
-			}
-
-			return {
-				isAcceptable,
-				semanticLevel,
-				detectedLevel,
-				explanation,
-			}
-		} else {
-			return {
-				isAcceptable,
-				semanticLevel,
-				detectedLevel,
-				explanation,
-			}
+		return {
+			isAcceptable,
+			semanticLevel,
+			detectedLevel,
+			explanation,
 		}
 	}
 }

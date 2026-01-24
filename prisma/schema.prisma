@@ -16,6 +16,7 @@ model User {
 
   exerciseProgresses ExerciseProgress[]
   unitProgresses UnitProgress[]
+  trackProgresses TrackProgress[]
 
   @@map("users")
 }
@@ -36,10 +37,11 @@ model Track {
   id String @id @default(uuid())
 
   name String
-  courseId String 
+  courseId String @map("course_id")
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   units Unit[]
+  progresses TrackProgress[]
 
   @@map("tracks")
 }
@@ -49,29 +51,13 @@ model Unit {
 
   name String?
 
-  trackId String 
+  trackId String @map("track_id")
   track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
 
   exercises Exercise[]
-  unitProgresses UnitProgress[]
+  progresses UnitProgress[]
 
   @@map("units")
-}
-
-model UnitProgress {
-  id String @id @default(uuid())
-
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  isCompleted Boolean @default(false)
-  totalExercises Int
-  completedExercises Int @default(0)
-  
-  unitId String
-  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
-
-  @@map("unit_progresses")
 }
 
 model Exercise {
@@ -88,6 +74,36 @@ model Exercise {
   exerciseProgresses ExerciseProgress[]
 
   @@map("exercises")
+}
+
+model TrackProgress {
+  id String @id @default(uuid())
+  isCompleted Boolean @default(false)
+  totalUnits Int @map("total_units")
+  completedUnits Int @default(0) @map("completed_units")
+
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  trackId String @map("track_id")
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@map("track_progresses")
+}
+
+model UnitProgress {
+  id String @id @default(uuid())
+  isCompleted Boolean @default(false)
+  totalExercises Int
+  completedExercises Int @default(0)
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  unitId String
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@map("unit_progresses")
 }
 
 model ExerciseProgress {
