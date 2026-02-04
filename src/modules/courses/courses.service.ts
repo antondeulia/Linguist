@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
-import { CoursesRepo, CourseWithRelations } from './courses.repo'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { CoursesRepo } from './courses.repo'
 import { Course } from 'generated/prisma/browser'
 import { GetCourseInput, TrackToReturn, UnitToReturn } from './types'
+import { CreateCourseDto } from './dtos'
 
 @Injectable()
 export class CoursesService {
@@ -11,93 +12,26 @@ export class CoursesService {
 		return await this.coursesRepo.getMany()
 	}
 
-	async getById(data: GetCourseInput): Promise<any> {
-		const course: CourseWithRelations | null = await this.coursesRepo.getById(data)
+	async create(data: CreateCourseDto): Promise<Course> {
+		const existing = await this.coursesRepo.findByLangs({
+			sourceLang: data.sourceLang,
+			targetLang: data.targetLang,
+		})
 
-		if (!course) {
-			throw new NotFoundException('Course not found')
+		if (existing) {
+			throw new ConflictException('Course with these languages already exists')
 		}
 
-		const userId = '1'
+		return await this.coursesRepo.create(data)
+	}
 
-		/* 
-		 course {
-		 	id: string
-			name: string;
-			sourceLang: string;
-			targetLang: string;
+	async delete(id: string): Promise<Course> {
+		const existing = await this.coursesRepo.getById(id)
 
-			tracks: [
-				{
-					id: string
-					isCompleted: boolean
-					name: string
-
-					units: [
-						id: string;
-						isCompleted: boolean
-						name: string;
-
-						exercises: [
-							...
-						]
-					]
-				}
-			]
-		 }
-		 
-		 */
-
-		const tracksToReturn: TrackToReturn[] = []
-
-		for (let i = 0; i < course.tracks.length; i++) {
-			let unitsToReturn: UnitToReturn[] = []
-
-			const trackProgress = course.tracks[i].progresses.find(
-				p => p.userId === userId,
-			)
-
-			const isTrackCompleted = trackProgress?.isCompleted || false
-			const isTrackAvailable =
-				i === 0 ? true : tracksToReturn[i - 1].isCompleted === true
-
-			const trackToReturn: TrackToReturn = {
-				id: course.tracks[i].id,
-				name: course.tracks[i].name,
-				isCompleted: isTrackCompleted,
-				isAvailable: isTrackAvailable,
-				units: unitsToReturn,
-			}
-
-			for (let b = 0; b < course.tracks[i].units.length; b++) {
-				const unitProgress = course.tracks[i].units[b].progresses.find(
-					u => u.userId === userId,
-				)
-
-				const isUnitCompleted = unitProgress?.isCompleted || false
-				const isUnitAvailable =
-					isTrackAvailable &&
-					(b === 0 ? true : unitsToReturn[b - 1].isCompleted === true)
-
-				const unitToReturn: UnitToReturn = {
-					id: course.tracks[i].units[b].id,
-					name: course.tracks[i].units[b].name || '',
-					isCompleted: isUnitCompleted,
-					isAvailable: isUnitAvailable,
-				}
-
-				unitsToReturn.push(unitToReturn)
-			}
-
-			tracksToReturn.push(trackToReturn)
+		if (!existing) {
+			throw new NotFoundException('Course does not exist')
 		}
 
-		return {
-			id: course.id,
-			name: course.name,
-			sourceLang: course.sourceLang,
-			targetLang: course.targetLang,
-			tracks: tracksToReturn,
-		}
+		return await this.coursesRepo.delete(id)
 	}
 }

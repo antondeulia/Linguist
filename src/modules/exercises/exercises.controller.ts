@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common'
 import { ExercisesService } from './exercises.service'
 import { ApiOperation } from '@nestjs/swagger'
-import { ValidateExerciseDto } from './dtos/validate-exercise.dto'
+import { CreateExerciseDto, ValidateExerciseDto } from './dtos'
 
 @Controller('exercises')
 export class ExercisesController {
@@ -17,5 +17,11 @@ export class ExercisesController {
 	@Post('/validate')
 	async validate(@Body() dto: ValidateExerciseDto) {
 		return await this.exercisesService.validate(dto)
+	}
+
+	@ApiOperation({ summary: 'Creates a new exercise' })
+	@Post()
+	async create(@Body() dto: CreateExerciseDto) {
+		return await this.exercisesService.create(dto)
 	}
 }
