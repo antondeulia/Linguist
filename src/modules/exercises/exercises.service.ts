@@ -7,7 +7,9 @@ import { ValidateExerciseLlmRes } from 'src/core/types/validate-exercise-llm.res
 import { ExerciseProgressRepo } from '../exercise-progress/exercise-progress.repo'
 import { UnitProgressesService } from '../unit-progresses/unit-progresses.service'
 import { TrackProgressesService } from '../track-progresses/track-progresses.service'
-import { Unit } from 'generated/prisma/browser'
+import { CreateExerciseDto } from './dtos'
+import { SegmentsRepo } from '../segments/segments.repo'
+import { Exercise, TextSegment } from 'generated/prisma/browser'
 
 @Injectable()
 export class ExercisesService {
@@ -18,11 +20,30 @@ export class ExercisesService {
 		private readonly exercisesRepo: ExercisesRepo,
 		private readonly exerciseProgressRepo: ExerciseProgressRepo,
 		private readonly unitProgressesService: UnitProgressesService,
-		private readonly trackProgressesService: TrackProgressesService,
+		private readonly segmentsRepo: SegmentsRepo,
 	) {
 		this.client = new OpenAI({
 			apiKey: this.config.getOrThrow<string>('OPENAI_API_KEY'),
 		})
+	}
+
+	async create(data: CreateExerciseDto): Promise<Exercise> {
+		const exercise = await this.exercisesRepo.create(data)
+
+		let segments: TextSegment[] = []
+
+		for (let i = 0; i < data.segments.length; i++) {
+			const segment = await this.segmentsRepo.create({
+				text: data.segments[i].text,
+				translation: data.segments[i].translation,
+				hover: data.segments[i].hover,
+				exerciseId: exercise.id,
+			})
+
+			segments.push(segment)
+		}
+
+		return exercise
 	}
 
 	async getMany(unitId: string) {
@@ -77,17 +98,23 @@ export class ExercisesService {
 						Evaluate the user's answer.
 						Explanation should be very clear and very short, with advice.
 						Talk to me "you", not "user" as a third person
+						Give short, answers. For example with correct version and/or short example.
 					`,
 				},
 				{
 					role: 'user',
-					content: JSON.stringify({
+					content: `
+					You have "sourceLang", it is a language which user sees, and "targetLang" - is a language which user should write in
+					User should translate phrase from "sourceLang" to "targetLang"
+
+					${JSON.stringify({
 						exerciseType: exercise.type,
-						exerciseText: exercise.text,
+						exerciseText: exercise.rawText,
 						userResponse: data.response,
 						sourceLang: exercise.sourceLang,
 						targetLang: exercise.targetLang,
-					}),
+					})}
+					`,
 				},
 			],
 		})

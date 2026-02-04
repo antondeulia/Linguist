@@ -1,6 +1,7 @@
 import { Controller, Delete, Get, Post } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 import { PrismaService } from './infra/db/prisma.service'
+import { Course } from 'generated/prisma/browser'
 
 @Controller()
 export class AppController {
@@ -21,12 +22,25 @@ export class AppController {
 	@ApiOperation({ summary: 'Seed db' })
 	@Post()
 	async seedDb() {
-		// Course
-		const course = await this.prisma.course.create({
+		// Coursed
+		const courses: Course[] = []
+
+		for (let i = 0; i < 12; i++) {
+			const course = await this.prisma.course.create({
+				data: {
+					name: `English-${i}`,
+					sourceLang: 'en',
+					targetLang: 'ru',
+				},
+			})
+
+			courses.push(course)
+		}
+
+		const section = await this.prisma.section.create({
 			data: {
-				name: 'Seed Course',
-				sourceLang: 'en',
-				targetLang: 'ru',
+				name: 'A1-A2',
+				courseId: courses[0].id,
 			},
 		})
 
@@ -35,7 +49,7 @@ export class AppController {
 			const track = await this.prisma.track.create({
 				data: {
 					name: `Track #${i + 1}`,
-					courseId: course.id,
+					sectionId: section.id,
 				},
 			})
 
@@ -53,27 +67,30 @@ export class AppController {
 					data: {
 						unitId: unit.id,
 						type: 'fromSourceToTarget',
-						text: 'Hello',
+						rawText: 'Hello',
 						sourceLang: 'en',
 						targetLang: 'ru',
+						direction: 'fromSourceToTarget',
 					},
 				})
 				await this.prisma.exercise.create({
 					data: {
 						unitId: unit.id,
 						type: 'fromSourceToTarget',
-						text: 'How are you?',
+						rawText: 'How are you?',
 						sourceLang: 'en',
 						targetLang: 'ru',
+						direction: 'fromSourceToTarget',
 					},
 				})
 				await this.prisma.exercise.create({
 					data: {
 						unitId: unit.id,
 						type: 'fromSourceToTarget',
-						text: 'My name is Alice',
+						rawText: 'My name is Alice',
 						sourceLang: 'en',
 						targetLang: 'ru',
+						direction: 'fromSourceToTarget',
 					},
 				})
 			}

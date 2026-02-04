@@ -1,6 +1,17 @@
-import { Controller, Get, Param } from '@nestjs/common'
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	HttpCode,
+	HttpStatus,
+	Param,
+	Post,
+} from '@nestjs/common'
 import { CoursesService } from './courses.service'
 import { ApiOperation, ApiTags } from '@nestjs/swagger'
+import { CreateCourseDto } from './dtos'
+import { Course } from 'generated/prisma/browser'
 
 @ApiTags('courses')
 @Controller('courses')
@@ -13,11 +24,16 @@ export class CoursesController {
 		return await this.coursesService.getMany()
 	}
 
-	@ApiOperation({ summary: 'Returns a course by id' })
-	@Get(':id')
-	async getById(@Param('id') id: string) {
-		const userId = '1'
+	@ApiOperation({ summary: 'Creates a new course' })
+	@Post()
+	async create(@Body() dto: CreateCourseDto): Promise<Course> {
+		return await this.coursesService.create(dto)
+	}
 
-		return await this.coursesService.getById({ id, userId })
+	@ApiOperation({ summary: 'Deletes a course' })
+	@Delete(':id')
+	@HttpCode(HttpStatus.OK)
+	async delete(@Param('id') id: string) {
+		return await this.coursesService.delete(id)
 	}
 }

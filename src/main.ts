@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import { swaggerConfig } from './core/config/swagger'
-import { Logger } from '@nestjs/common'
+import { Logger, ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import chalk from 'chalk'
 
@@ -13,8 +13,8 @@ async function bootstrap() {
 	swaggerConfig(app)
 
 	app.setGlobalPrefix('api')
-
 	app.enableCors()
+	app.useGlobalPipes(new ValidationPipe())
 
 	const configService = app.get(ConfigService)
 
