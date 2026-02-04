@@ -1,10 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { UnitsRepo } from './units.repo'
 import { Unit } from 'generated/prisma/client'
+import { CreateUnitDto } from './dtos'
 
 @Injectable()
 export class UnitsService {
 	constructor(private readonly unitsRepo: UnitsRepo) {}
+
+	async create(data: CreateUnitDto) {
+		return await this.unitsRepo.create(data)
+	}
 
 	async getById(id: string): Promise<Unit> {
 		const unit: Unit | null = await this.unitsRepo.getById(id)
@@ -12,7 +17,6 @@ export class UnitsService {
 		if (!unit) {
 			throw new NotFoundException('Unit not found')
 		}
-
 		return unit
 	}
 }

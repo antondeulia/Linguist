@@ -1,3 +1,5 @@
+import { Exercise } from 'generated/prisma/browser'
+
 export type TrackToReturn = {
 	id: string
 	name: string

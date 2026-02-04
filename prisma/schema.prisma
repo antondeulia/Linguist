@@ -14,11 +14,25 @@ model User {
   email String @unique
   pass String
 
+  userState UserState?
+
+  sectionProgresses SectionProgress[]
   exerciseProgresses ExerciseProgress[]
   unitProgresses UnitProgress[]
   trackProgresses TrackProgress[]
 
   @@map("users")
+}
+
+model UserState {
+  userId String @id @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  theme String?
+  currentCourseId String?
+  currentSectionId String?
+
+  @@map("user_states")
 }
 
 model Course {
@@ -28,17 +42,29 @@ model Course {
   sourceLang String 
   targetLang String
 
-  tracks Track[]
+  sections Section[]
 
   @@map("courses")
 }
 
-model Track {
-  id String @id @default(uuid())
-
+model Section {
+  id   String @id @default(uuid())
   name String
   courseId String @map("course_id")
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  tracks Track[]
+  progresses SectionProgress[]
+
+  @@map("sections")
+}
+
+model Track {
+  id String @id @default(uuid())
+  name String
+
+  sectionId String @map("section_id")
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   units Unit[]
   progresses TrackProgress[]
@@ -63,10 +89,12 @@ model Unit {
 model Exercise {
   id String @id @default(uuid())
 
-  text String
-  type ExerciseType
+  rawText String
+  type String
   sourceLang String 
-  targetLang String 
+  targetLang String
+  direction String
+  segments TextSegment[]
 
   unitId String
   unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
@@ -74,6 +102,31 @@ model Exercise {
   exerciseProgresses ExerciseProgress[]
 
   @@map("exercises")
+}
+
+model TextSegment {
+  id String @id @default(uuid())
+  text String
+  translation String
+  hover Boolean
+  
+  exerciseId String
+  exercise Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@map("text_segments")
+}
+
+// Progresses
+model SectionProgress {
+  id String @id @default(uuid())
+  isCompleted Boolean @default(false) @map("is_completed")
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sectionId String
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@map("section_progresses")
 }
 
 model TrackProgress {
