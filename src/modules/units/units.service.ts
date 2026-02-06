@@ -33,7 +33,6 @@ export class UnitsService {
 		if (!unit) {
 			throw new NotFoundException('Unit not found')
 		}
-
 		return unit
 	}
 }
