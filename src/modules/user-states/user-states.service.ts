@@ -24,4 +24,34 @@ export class UserStatesService {
 
 		return await this.userStatesRepo.update(userId, data)
 	}
+
+	async getCurrentCourseId(userId: string) {
+		const userState = await this.userStatesRepo.findByUserId(userId)
+
+		if (!userState || !userState.currentCourseId) {
+			throw new NotFoundException()
+		}
+
+		return userState.currentCourseId
+	}
+
+	async getCurrentSectionId(userId: string) {
+		const userState = await this.userStatesRepo.findByUserId(userId)
+
+		if (!userState || !userState.currentSectionId) {
+			throw new NotFoundException()
+		}
+
+		return userState.currentSectionId
+	}
+
+	async getCurrentUnitId(userId: string) {
+		const userState = await this.userStatesRepo.findByUserId(userId)
+
+		if (!userState || !userState.currentUnitId) {
+			throw new NotFoundException()
+		}
+
+		return userState.currentUnitId
+	}
 }

@@ -10,6 +10,7 @@ import { TrackProgressesService } from '../track-progresses/track-progresses.ser
 import { CreateExerciseDto } from './dtos'
 import { SegmentsRepo } from '../segments/segments.repo'
 import { Exercise, TextSegment } from 'generated/prisma/browser'
+import { UserStatesService } from '../user-states/user-states.service'
 
 @Injectable()
 export class ExercisesService {
@@ -21,6 +22,7 @@ export class ExercisesService {
 		private readonly exerciseProgressRepo: ExerciseProgressRepo,
 		private readonly unitProgressesService: UnitProgressesService,
 		private readonly segmentsRepo: SegmentsRepo,
+		private readonly userStatesService: UserStatesService,
 	) {
 		this.client = new OpenAI({
 			apiKey: this.config.getOrThrow<string>('OPENAI_API_KEY'),
@@ -46,8 +48,10 @@ export class ExercisesService {
 		return exercise
 	}
 
-	async getMany(unitId: string) {
-		return await this.exercisesRepo.getMany(unitId)
+	async getMany(userId: string): Promise<Exercise[]> {
+		const currentUnitId = await this.userStatesService.getCurrentUnitId(userId)
+
+		return await this.exercisesRepo.getMany(currentUnitId)
 	}
 
 	async validate(data: ValidateExerciseDto) {
@@ -99,20 +103,22 @@ export class ExercisesService {
 						Explanation should be very clear and very short, with advice.
 						Talk to me "you", not "user" as a third person
 						Give short, answers. For example with correct version and/or short example.
-					`,
+						You have "sourceLang", it is a language which user sees, and "targetLang" - is a language which user should write in
+						User should translate phrase from "sourceLang" to "targetLang"
+						Do not check the capitalization and signs like commas or question marks and so on
+						also ignore some minor spelling mistakes
+						`,
 				},
 				{
 					role: 'user',
 					content: `
-					You have "sourceLang", it is a language which user sees, and "targetLang" - is a language which user should write in
-					User should translate phrase from "sourceLang" to "targetLang"
-
 					${JSON.stringify({
 						exerciseType: exercise.type,
 						exerciseText: exercise.rawText,
 						userResponse: data.response,
 						sourceLang: exercise.sourceLang,
 						targetLang: exercise.targetLang,
+						direction: exercise.direction,
 					})}
 					`,
 				},

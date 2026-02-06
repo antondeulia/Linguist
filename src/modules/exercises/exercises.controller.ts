@@ -7,10 +7,12 @@ import { CreateExerciseDto, ValidateExerciseDto } from './dtos'
 export class ExercisesController {
 	constructor(private readonly exercisesService: ExercisesService) {}
 
-	@ApiOperation({ summary: 'Returns a list of exercises' })
-	@Get(`/:unitId`)
-	async getMany(@Param('unitId') unitId: string) {
-		return await this.exercisesService.getMany(unitId)
+	@ApiOperation({ summary: 'Returns a list of exercises by current unit id' })
+	@Get()
+	async getMany() {
+		const userId = '1'
+
+		return await this.exercisesService.getMany(userId)
 	}
 
 	@ApiOperation({ summary: "Validates user's response" })

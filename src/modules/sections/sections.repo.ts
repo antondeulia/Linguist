@@ -38,4 +38,18 @@ export class SectionsRepo {
 			},
 		})
 	}
+
+	// Admin
+	async findByIdAdmin(id: string) {
+		return await this.prisma.section.findUnique({
+			where: { id },
+			include: {
+				tracks: {
+					include: {
+						units: true,
+					},
+				},
+			},
+		})
+	}
 }

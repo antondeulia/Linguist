@@ -25,6 +25,9 @@ export class ExercisesRepo {
 			where: {
 				unitId,
 			},
+			include: {
+				segments: true,
+			},
 		})
 	}
 

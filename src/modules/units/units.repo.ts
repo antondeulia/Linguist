@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { Unit } from 'generated/prisma/browser'
 import { PrismaService } from 'src/infra/db/prisma.service'
-import { CreateTrackDto } from '../tracks/dtos'
 import { CreateUnitDto } from './dtos'
 
 @Injectable()

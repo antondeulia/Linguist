@@ -13,9 +13,18 @@ export class UnitsController {
 		return await this.unitsService.create(dto)
 	}
 
+	@ApiOperation({ summary: "Returns current user's unit" })
+	@Get()
+	async getCurrent() {
+		const userId = '1'
+
+		return await this.unitsService.getCurrent(userId)
+	}
+
+	// Admin
 	@ApiOperation({ summary: 'Returns a unit by id' })
 	@Get(':id')
-	async getById(@Param('id') id: string) {
+	async getByIdAdmin(@Param('id') id: string) {
 		return await this.unitsService.getById(id)
 	}
 }

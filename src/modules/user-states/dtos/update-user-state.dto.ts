@@ -11,4 +11,9 @@ export class UpdateUserStateDto {
 	@IsString()
 	@IsOptional()
 	currentSectionId?: string
+
+	@ApiProperty()
+	@IsString()
+	@IsOptional()
+	currentUnitId?: string
 }
