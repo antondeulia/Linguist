@@ -24,6 +24,12 @@ export class CoursesController {
 		return await this.coursesService.getMany()
 	}
 
+	@ApiOperation({ summary: 'Returns a course' })
+	@Get(':id')
+	async getByIdAdmin(@Param('id') id: string) {
+		return await this.coursesService.getByIdAdmin(id)
+	}
+
 	@ApiOperation({ summary: 'Creates a new course' })
 	@Post()
 	async create(@Body() dto: CreateCourseDto): Promise<Course> {

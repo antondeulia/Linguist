@@ -38,4 +38,17 @@ export class CoursesRepo {
 	}): Promise<Course | null> {
 		return await this.prisma.course.findFirst({ where: { sourceLang, targetLang } })
 	}
+
+	async findById(id: string) {
+		return await this.prisma.course.findUnique({
+			where: { id },
+			include: {
+				sections: {
+					include: {
+						tracks: true,
+					},
+				},
+			},
+		})
+	}
 }

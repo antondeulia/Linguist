@@ -6,6 +6,7 @@ import { ExerciseProgressModule } from '../exercise-progress/exercise-progress.m
 import { TrackProgressesModule } from '../track-progresses/track-progresses.module'
 import { UnitProgressesModule } from '../unit-progresses/unit-progresses.module'
 import { SegmentsModule } from '../segments/segments.module'
+import { UserStatesModule } from '../user-states/user-states.module'
 
 @Module({
 	imports: [
@@ -13,6 +14,7 @@ import { SegmentsModule } from '../segments/segments.module'
 		TrackProgressesModule,
 		UnitProgressesModule,
 		SegmentsModule,
+		UserStatesModule,
 	],
 	controllers: [ExercisesController],
 	providers: [ExercisesService, ExercisesRepo],

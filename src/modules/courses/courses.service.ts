@@ -12,6 +12,10 @@ export class CoursesService {
 		return await this.coursesRepo.getMany()
 	}
 
+	async getByIdAdmin(id: string) {
+		return await this.coursesRepo.findById(id)
+	}
+
 	async create(data: CreateCourseDto): Promise<Course> {
 		const existing = await this.coursesRepo.findByLangs({
 			sourceLang: data.sourceLang,

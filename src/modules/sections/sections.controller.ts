@@ -28,4 +28,20 @@ export class SectionsController {
 	async getById(@Param('id') id: string) {
 		return await this.sectionsService.getById(id)
 	}
+
+	@ApiOperation({
+		summary: 'Returns an array of sections by courseId (for admins)',
+	})
+	@Get('admin/:courseId')
+	async getManyAdmin(@Param('courseId') courseId: string) {
+		return await this.sectionsService.getManyAdmin(courseId)
+	}
+
+	@ApiOperation({
+		summary: 'Returns a section by id',
+	})
+	@Get('admin/one/:id')
+	async getByIdAdmin(@Param('id') id: string) {
+		return await this.sectionsService.getByIdAdmin(id)
+	}
 }

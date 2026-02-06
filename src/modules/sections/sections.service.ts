@@ -137,6 +137,20 @@ export class SectionsService {
 			tracks: tracksToReturn,
 		}
 	}
+
+	// Admin
+	async getByIdAdmin(id: string) {
+		const section = await this.sectionsRepo.findByIdAdmin(id)
+
+		if (!section) {
+			throw new NotFoundException('Section not found')
+		}
+		return section
+	}
+
+	async getManyAdmin(courseId: string) {
+		return await this.sectionsRepo.findMany(courseId)
+	}
 }
 
 export type SectionWithRelations = Prisma.SectionGetPayload<{
